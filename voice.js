@@ -49,7 +49,9 @@ export const LINES = {
   sim:      { icon: "i-grid", en: "Simulator ready.", de: "Simulator bereit.", ru: "Симулятор готов." },
   obstacle: { icon: "i-buffer", en: (v) => `Obstacle, ${v.cm} centimetres. Braking.`, de: (v) => `Hindernis, ${v.cm} Zentimeter. Bremsung.`,
               ru: (v) => `Препятствие, ${v.cm} ${ruPlural(v.cm, "сантиметр", "сантиметра", "сантиметров")}. Торможение.` },
-  clear:    { icon: "i-signal", en: "Track clear.", de: "Strecke frei.", ru: "Путь свободен." },
+  // The guard stopped and there is no distance to name: no echo can be open space or a bad sensor.
+  noEcho:   { icon: "i-signal", en: "No echo. Stop.", de: "Kein Echo. Halt.", ru: "Нет эха. Стоп." },
+  clear:   { icon: "i-signal", en: "Track clear.", de: "Strecke frei.", ru: "Путь свободен." },
   clearZero:{ icon: "i-lever", en: "Track clear. Lever to zero.", de: "Strecke frei. Fahrschalter auf Null.", ru: "Путь свободен. Контроллер на ноль." },
   leverZero:{ icon: "i-lever", en: "Lever to zero first.", de: "Erst Fahrschalter auf Null.", ru: "Сначала контроллер на ноль." },
   neutral:  { icon: "i-reverser", en: "Direction switch is in neutral.", de: "Richtungsschalter steht auf Null.", ru: "Реверсор в нуле." },
@@ -83,7 +85,7 @@ export const LINES = {
 };
 
 // Lines about safety: spoken in full, an ordinary line waits until they're done.
-const SAFETY = new Set(["obstacle", "clearZero", "leverZero", "reverse", "caution", "sifa", "sifaBrake", "ebrake", "bump", "lost", "noMotors"]);
+const SAFETY = new Set(["obstacle", "noEcho", "clearZero", "leverZero", "reverse", "caution", "sifa", "sifaBrake", "ebrake", "bump", "lost", "noMotors"]);
 
 // Voice commands: words in all three languages at once (children mix languages, and
 // "stop" sounds the same everywhere). Short words that hide in other phrases are left out.

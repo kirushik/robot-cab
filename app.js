@@ -355,8 +355,9 @@ function showDistance(cm) {
   lastCm = cm;
   $("distVal").textContent = cm === null ? "—" : String(cm);
   const g = settings.guard;
-  // Protection off: the signal is dark, because nothing will stop for it.
-  const aspect = !g ? "" : cm === null ? "g" : cm < g ? "r" : cm < g + 30 ? "y" : "g";
+  // Protection off: the signal is dark, because nothing will stop for it. No echo is dark too:
+  // it can mean open space or a bad sensor, and the robot's guard blocks forward after 500 ms of it.
+  const aspect = !g || cm === null ? "" : cm < g ? "r" : cm < g + 30 ? "y" : "g";
   $("signal").className = `signal ${aspect}`;
   // Old firmware without the robot's own guard: the app's check trips and latches the same way.
   if (!guardOnRobot && g > 0 && robot?.kind === "ble") {
@@ -381,8 +382,15 @@ function showDistance(cm) {
 }
 
 // Clear enough to drive on: a few cm past the protection limit, so it doesn't flicker.
+// No reading is never clear.
 function trackClear() {
-  return !settings.guard || lastCm === null || lastCm >= settings.guard + 5;
+  return !settings.guard || (lastCm !== null && lastCm >= settings.guard + 5);
+}
+
+// Why it stopped, saying no more than the reading backs: a distance only if there is one.
+function sayBlocked(cm) {
+  if (cm === null) announce("noEcho");
+  else announce("obstacle", { cm });
 }
 
 function showBlocked(blocked, cm) {
@@ -391,7 +399,7 @@ function showBlocked(blocked, cm) {
   lamp("lampAtp", blocked ? "alarm" : settings.guard ? "on" : "");
   if (blocked) {
     if (state.throttle > 0) setTrip();
-    announce("obstacle", { cm: cm ?? lastCm ?? settings.guard });
+    sayBlocked(cm ?? lastCm);
     tone("alarm", 330, 160);
   }
   // "Clear" comes from the distance (showDistance), not from here: once tripped, the robot stops
@@ -880,7 +888,7 @@ async function driveFor(ms, run) {
 }
 function resumeHeld() {
   // The robot's guard lets go as soon as it stops pushing, so ask the distance, not the guard.
-  if (state.blocked || !trackClear()) { announce("obstacle", { cm: lastCm ?? settings.guard }); return; }
+  if (state.blocked || !trackClear()) { sayBlocked(lastCm); return; }
   playing.held = false;
   $("ttPlay").classList.remove("waiting");
   clearTrip();

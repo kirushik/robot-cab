@@ -10,7 +10,9 @@
 //   "distance" {cm: number | null}        null = no echo / nothing measured
 //   "buttons"  {mask}                     bit 0..3 board buttons, bit 4..5 Grove dual button
 //   "driver"   {ok}                       motor driver answering on I2C
-//   "guard"    {blocked, cm}              the robot's own obstacle reflex kicked in / released
+//   "guard"    {blocked, cm, limit}       the robot's own obstacle reflex kicked in / released;
+//                                         cm = distance measured then, if known (null on the real
+//                                         robot), limit = the configured guard distance
 //   "bump"     {}                         (pretend robot only) drove into something
 
 // Must match firmware/src/ble.rs
@@ -154,7 +156,8 @@ export class BleRobot extends EventTarget {
     if (what === "dist" && (rest[0] === "none" || Number.isFinite(Number(rest[0])))) {
       emit(this, "distance", { cm: rest[0] === "none" ? null : Number(rest[0]) });
     }
-    if (what === "guard") emit(this, "guard", { blocked: rest[0] === "stop", cm: Number(rest[1]) || null });
+    // `! guard stop 20` names the configured limit, not a measured distance.
+    if (what === "guard") emit(this, "guard", { blocked: rest[0] === "stop", cm: null, limit: Number(rest[1]) || null });
   }
 
   async #pump(heartbeat = false) {

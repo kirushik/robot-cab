@@ -219,7 +219,7 @@ export class SimRobot extends EventTarget {
     }
     const out = this.#rust.evaluate(ms(now));
     const event = (out >> 16) & 3;
-    if (event) this.#emit("guard", { blocked: event === 1, cm: this.distance() });
+    if (event) this.#emit("guard", { blocked: event === 1, cm: this.distance(), limit: this.#guardCm });
     return [i8(out & 0xff), i8((out >> 8) & 0xff)];
   }
 
@@ -231,7 +231,7 @@ export class SimRobot extends EventTarget {
     if (blocked) { l -= forward; r -= forward; }
     if (blocked !== this.#blocked) {
       this.#blocked = blocked;
-      this.#emit("guard", { blocked, cm });
+      this.#emit("guard", { blocked, cm, limit: this.#guardCm });
     }
     return [l, r];
   }
@@ -399,7 +399,7 @@ export class SimRobot extends EventTarget {
     // sensor beam, coloured like a signal aspect
     const p = this.pose;
     const cm = this.#lastCm;
-    const beamColor = cm === null ? C.green : cm < Math.max(this.#guardCm, 1) ? C.red : cm < this.#guardCm + 30 ? C.yellow : C.green;
+    const beamColor = cm === null ? C.label :cm < Math.max(this.#guardCm, 1) ? C.red : cm < this.#guardCm + 30 ? C.yellow : C.green;
     const reach = (cm ?? 120) + RADIUS;
     ctx.save();
     ctx.translate(p.x, p.y);
