@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#16181d">
+<title>Robot Workshop</title>
+<style>
+  :root {
+    --bg: #f4f5f7; --panel: #ffffff; --text: #16181d; --muted: #6b7280;
+    --accent: #2563eb; --accent-text: #ffffff; --danger: #dc2626; --ok: #16a34a;
+    --ring: #d1d5db; --knob: #2563eb;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16181d; --panel: #22252c; --text: #f3f4f6; --muted: #9ca3af;
+      --accent: #3b82f6; --ring: #3a3f4a; --knob: #60a5fa;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+    font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  body { display: flex; flex-direction: column; gap: 12px; padding: 16px; max-width: 520px; margin: 0 auto;
+    user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+  header { display: flex; align-items: center; gap: 12px; }
+  h1 { font-size: 20px; margin: 0; flex: 1; }
+  #status { font-size: 14px; color: var(--muted); }
+  #status.connected { color: var(--ok); }
+  button { font: inherit; border: 0; border-radius: 12px; padding: 12px 16px; cursor: pointer;
+    background: var(--panel); color: var(--text); box-shadow: inset 0 0 0 1px var(--ring); }
+  button.primary { background: var(--accent); color: var(--accent-text); box-shadow: none; }
+  button.on { background: #facc15; color: #16181d; box-shadow: none; }
+  button:disabled { opacity: .4; cursor: default; }
+  .panel { background: var(--panel); border-radius: 16px; padding: 16px; box-shadow: inset 0 0 0 1px var(--ring); }
+  #pad { position: relative; width: 100%; aspect-ratio: 1; max-width: 360px; margin: 0 auto;
+    border-radius: 50%; background: var(--bg); box-shadow: inset 0 0 0 2px var(--ring); touch-action: none; }
+  #pad::before, #pad::after { content: ""; position: absolute; background: var(--ring); }
+  #pad::before { left: 50%; top: 10%; bottom: 10%; width: 1px; }
+  #pad::after { top: 50%; left: 10%; right: 10%; height: 1px; }
+  #knob { position: absolute; left: 50%; top: 50%; width: 30%; height: 30%; border-radius: 50%;
+    background: var(--knob); transform: translate(-50%, -50%); z-index: 1; opacity: .9; }
+  .row { display: flex; gap: 12px; align-items: center; }
+  .row > * { flex: 1; }
+  label { font-size: 14px; color: var(--muted); }
+  input[type=range] { width: 100%; }
+  .meters { display: grid; grid-template-columns: auto 1fr 3ch; gap: 6px 10px; align-items: center; font-size: 14px; }
+  .meter { height: 10px; background: var(--bg); border-radius: 5px; position: relative; overflow: hidden; }
+  .meter > i { position: absolute; top: 0; bottom: 0; left: 50%; background: var(--accent); }
+  .buttons { display: flex; gap: 8px; }
+  .buttons span { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
+    font-size: 12px; box-shadow: inset 0 0 0 2px var(--ring); color: var(--muted); }
+  .buttons span.pressed { background: var(--ok); color: #fff; box-shadow: none; }
+  h2 { font-size: 17px; margin: 8px 0 0; }
+  .stack { display: flex; flex-direction: column; gap: 10px; }
+  input[type=text], input:not([type]), input[type=color] { font: inherit; padding: 10px 12px; border-radius: 10px;
+    border: 0; box-shadow: inset 0 0 0 1px var(--ring); background: var(--bg); color: var(--text); min-width: 0; }
+  input[type=color] { padding: 4px; height: 46px; }
+  .notes { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; }
+  .notes button { padding: 14px 0; }
+  .big { font-size: 26px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  #log { margin: 0; height: 160px; overflow: auto; background: var(--bg); border-radius: 10px; padding: 10px;
+    font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre-wrap; }
+  #cmdForm input { flex: 3; }
+  #log .sent { color: var(--accent); }
+  #log .err { color: var(--danger); }
+  .driver { font-size: 14px; color: var(--muted); }
+  .driver.ok { color: var(--ok); }
+  .driver.missing { color: var(--danger); }
+  #warning { display: none; background: #fef3c7; color: #78350f; border-radius: 12px; padding: 12px; font-size: 14px; }
+  .hint { font-size: 13px; color: var(--muted); text-align: center; margin: 0; }
+</style>
+</head>
+<body>
+  <header>
+    <h1>Robot Workshop</h1>
+    <span id="status">not connected</span>
+  </header>
+
+  <div id="warning">
+    This browser can't do Web Bluetooth. Use Chrome on Android, Windows, macOS or Linux
+    (on iPhone, try the free "Bluefy" browser app). The page must be opened over https:// or from localhost.
+  </div>
+
+  <button id="connect" class="primary">Connect to robot</button>
+
+  <div class="panel">
+    <div id="pad"><div id="knob"></div></div>
+    <p class="hint">Drag the dot to drive. Keyboard: arrows or WASD.</p>
+  </div>
+
+  <div class="panel" style="display:flex; flex-direction:column; gap:12px">
+    <div>
+      <label for="limit">Top speed: <b id="limitValue">50</b>%</label>
+      <input id="limit" type="range" min="10" max="100" step="5" value="50">
+    </div>
+    <div class="meters">
+      <span>Left</span><div class="meter"><i id="leftBar"></i></div><b id="leftValue">0</b>
+      <span>Right</span><div class="meter"><i id="rightBar"></i></div><b id="rightValue">0</b>
+    </div>
+    <div class="row">
+      <button id="headlight" disabled>Headlight</button>
+      <div>
+        <label>Robot buttons</label>
+        <div class="buttons"><span>1</span></div>
+      </div>
+    </div>
+    <div id="motorDriver" class="driver">Motor driver: –</div>
+  </div>
+
+  <h2>Workshop</h2>
+
+  <div class="panel stack">
+    <label for="lcd1">Screen (16 letters per line)</label>
+    <input id="lcd1" maxlength="16" value="Hello, robot!" autocomplete="off">
+    <input id="lcd2" maxlength="16" value="" placeholder="second line" autocomplete="off" aria-label="Screen line 2">
+    <button class="needs-robot" id="lcdShow" disabled>Show on screen</button>
+  </div>
+
+  <div class="panel stack">
+    <label>LED stick</label>
+    <div class="row">
+      <input id="ledColor" type="color" value="#ff6a00" aria-label="LED colour">
+      <button class="needs-robot" id="ledAll" disabled>All this colour</button>
+    </div>
+    <div class="row">
+      <button class="needs-robot" id="ledRainbow" disabled>Rainbow</button>
+      <button class="needs-robot" id="ledOff" disabled>Off</button>
+    </div>
+  </div>
+
+  <div class="panel stack">
+    <label>Buzzer</label>
+    <div class="notes" id="notes"></div>
+  </div>
+
+  <div class="panel stack">
+    <div class="row">
+      <div>
+        <label>Distance</label>
+        <div class="big" id="distance">–</div>
+      </div>
+      <button class="needs-robot" id="distToggle" disabled>Start measuring</button>
+    </div>
+    <div class="row">
+      <div>
+        <label>Gesture</label>
+        <div class="big" id="gesture">–</div>
+      </div>
+      <button class="needs-robot" id="gestureToggle" disabled>Start gestures</button>
+    </div>
+  </div>
+
+  <div class="panel stack">
+    <label for="cmd">Console (try <code>help</code>, <code>scan</code>, <code>dist</code>)</label>
+    <pre id="log" aria-live="polite"></pre>
+    <form id="cmdForm" class="row">
+      <input id="cmd" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="tone 440 300">
+      <button class="needs-robot" id="cmdSend" disabled>Send</button>
+    </form>
+  </div>
+
+<script>
+// Must match firmware/src/ble.rs
+const SERVICE      = "c0de0001-b0b0-4a5e-8d3c-2f6a1e9b7c00";
+const DRIVE        = "c0de0002-b0b0-4a5e-8d3c-2f6a1e9b7c00";
+const HEADLIGHT    = "c0de0003-b0b0-4a5e-8d3c-2f6a1e9b7c00";
+const BUTTONS      = "c0de0004-b0b0-4a5e-8d3c-2f6a1e9b7c00";
+const MOTOR_DRIVER = "c0de0005-b0b0-4a5e-8d3c-2f6a1e9b7c00";
+// Nordic UART Service: the text console (firmware/src/console.rs)
+const UART         = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
+const UART_RX      = "6e400002-b5a3-f393-e0a9-e50e24dcca9e"; // we write commands here
+const UART_TX      = "6e400003-b5a3-f393-e0a9-e50e24dcca9e"; // replies arrive here
+
+// The robot stops by itself if it hears nothing for 500 ms, so keep talking.
+const SEND_EVERY_MS = 100;
+
+const $ = (id) => document.getElementById(id);
+let device = null, chars = null;
+let stick = { x: 0, y: 0 };        // -1..1 each, y up = forward
+let keys = new Set();
+let headlightOn = false;
+let lastSent = null, writing = false;
+
+if (!navigator.bluetooth) {
+  $("warning").style.display = "block";
+  $("connect").disabled = true;
+}
+
+// ---- Bluetooth -----------------------------------------------------------
+
+$("connect").onclick = async () => {
+  if (device?.gatt.connected) { device.gatt.disconnect(); return; }
+  try {
+    device = await navigator.bluetooth.requestDevice({ filters: [{ services: [SERVICE] }], optionalServices: [UART] });
+    device.addEventListener("gattserverdisconnected", onDisconnected);
+    await connect();
+  } catch (e) {
+    setStatus(e.name === "NotFoundError" ? "not connected" : "error: " + e.message);
+  }
+};
+
+async function connect() {
+  setStatus("connecting…");
+  const server = await device.gatt.connect();
+  const service = await server.getPrimaryService(SERVICE);
+  chars = {
+    drive: await service.getCharacteristic(DRIVE),
+    headlight: await service.getCharacteristic(HEADLIGHT),
+    buttons: await service.getCharacteristic(BUTTONS),
+    motorDriver: await service.getCharacteristic(MOTOR_DRIVER),
+  };
+  chars.buttons.addEventListener("characteristicvaluechanged", (e) => showButtons(e.target.value.getUint8(0)));
+  await chars.buttons.startNotifications();
+  showButtons((await chars.buttons.readValue()).getUint8(0));
+  chars.motorDriver.addEventListener("characteristicvaluechanged", (e) => showMotorDriver(e.target.value.getUint8(0)));
+  await chars.motorDriver.startNotifications();
+  showMotorDriver((await chars.motorDriver.readValue()).getUint8(0));
+  headlightOn = (await chars.headlight.readValue()).getUint8(0) !== 0;
+  await robotConsole.attach(server);
+
+  lastSent = null;
+  setStatus("connected to " + (device.name || "robot"), true);
+  $("connect").textContent = "Disconnect";
+  $("headlight").disabled = false;
+  renderHeadlight();
+}
+
+function onDisconnected() {
+  chars = null;
+  setStatus("disconnected");
+  $("connect").textContent = "Connect to robot";
+  $("headlight").disabled = true;
+  showMotorDriver(null);
+  robotConsole.detach();
+  // Never resume old motion after a reconnect.
+  stick = { x: 0, y: 0 }; keys.clear(); moveKnob(0, 0);
+}
+
+async function sendDrive(force = false) {
+  const [left, right] = currentDrive();
+  showMotors(left, right);
+  if (!chars || writing) return;
+  if (!force && lastSent && lastSent[0] === left && lastSent[1] === right) return;
+  writing = true;
+  try {
+    await chars.drive.writeValueWithoutResponse(Int8Array.of(left, right));
+    lastSent = [left, right];
+  } catch (e) {
+    console.warn("drive write failed", e);
+  } finally {
+    writing = false;
+  }
+}
+
+// Heartbeat: resend the current command so the failsafe doesn't kick in.
+setInterval(() => sendDrive(true), SEND_EVERY_MS);
+
+$("headlight").onclick = async () => {
+  headlightOn = !headlightOn;
+  renderHeadlight();
+  await chars?.headlight.writeValue(Uint8Array.of(headlightOn ? 1 : 0));
+};
+
+// Stop when the page goes to the background (phone locked, tab switched).
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) { stick = { x: 0, y: 0 }; keys.clear(); moveKnob(0, 0); sendDrive(true); }
+});
+
+// ---- Console: text commands over the Nordic UART Service ----------------
+
+// One command per line, exactly one reply line per command, in order. Lines starting with
+// "buttons " are events the robot sends by itself, not replies.
+const robotConsole = {
+  rx: null, tx: null, buffer: "", nextId: 1, waiting: new Map(), queue: Promise.resolve(), chunk: 180,
+
+  async attach(server) {
+    const uart = await server.getPrimaryService(UART);
+    this.rx = await uart.getCharacteristic(UART_RX);
+    this.tx = await uart.getCharacteristic(UART_TX);
+    this.tx.addEventListener("characteristicvaluechanged", (e) => this.received(e.target.value));
+    await this.tx.startNotifications();
+    document.querySelectorAll(".needs-robot").forEach((b) => (b.disabled = false));
+  },
+
+  detach() {
+    this.rx = this.tx = null;
+    this.buffer = "";
+    for (const { reject } of this.waiting.values()) reject(new Error("disconnected"));
+    this.waiting.clear();
+    this.queue = Promise.resolve();
+    document.querySelectorAll(".needs-robot").forEach((b) => (b.disabled = true));
+    stopPolling();
+    lcd.ready = gesture.ready = false;
+  },
+
+  // Replies carry the tag of their command ("#7 dist 42"); lines starting with "!" are events
+  // the robot sends by itself. Anything else is ignored.
+  received(dataView) {
+    this.buffer += new TextDecoder().decode(dataView);
+    let newline;
+    while ((newline = this.buffer.indexOf("\n")) >= 0) {
+      const line = this.buffer.slice(0, newline);
+      this.buffer = this.buffer.slice(newline + 1);
+      if (!line.startsWith("#")) continue; // events: the buttons characteristic shows these already
+      const space = line.indexOf(" ");
+      const entry = this.waiting.get(line.slice(0, space));
+      if (entry) entry.resolve(line.slice(space + 1));
+    }
+  },
+
+  // Send one command and get its reply. Commands queue up, so callers never interleave.
+  send(command, { quiet = false } = {}) {
+    const run = async () => {
+      if (!this.rx) throw new Error("not connected");
+      const tag = "#" + this.nextId++;
+      const reply = new Promise((resolve, reject) => {
+        this.waiting.set(tag, { resolve, reject });
+        setTimeout(() => reject(new Error("no reply")), 5000);
+      });
+      try {
+        await this.write(`${tag} ${command}\n`);
+        const line = await reply;
+        if (!quiet) log(command, line);
+        if (line.startsWith("err ")) throw new Error(line.slice(4));
+        return line;
+      } finally {
+        this.waiting.delete(tag);
+      }
+    };
+    const result = this.queue.then(run, run);
+    this.queue = result.catch(() => {});
+    return result;
+  },
+
+  async write(text) {
+    const bytes = new TextEncoder().encode(text);
+    let offset = 0;
+    while (offset < bytes.length) {
+      const piece = bytes.slice(offset, offset + this.chunk);
+      try {
+        await this.rx.writeValueWithResponse(piece);
+        offset += piece.length;
+      } catch (e) {
+        // Only a too-long write is worth retrying smaller; anything else is a real failure.
+        if (this.chunk === 20 || piece.length <= 20) throw e;
+        this.chunk = 20;
+      }
+    }
+  },
+};
+
+
+function log(command, reply) {
+  const box = $("log");
+  const sent = Object.assign(document.createElement("div"), { className: "sent", textContent: "> " + command });
+  const got = Object.assign(document.createElement("div"), { textContent: reply });
+  if (reply.startsWith("err ")) got.className = "err";
+  box.append(sent, got);
+  while (box.children.length > 200) box.firstChild.remove();
+  box.scrollTop = box.scrollHeight;
+}
+
+$("cmdForm").onsubmit = async (e) => {
+  e.preventDefault();
+  const command = $("cmd").value.trim();
+  if (!command) return;
+  $("cmd").value = "";
+  try { await robotConsole.send(command); } catch (err) { if (!robotConsole.rx) log(command, "err " + err.message); }
+};
+
+const hex = (n) => n.toString(16).padStart(2, "0");
+
+// ---- Screen: Grove 16x2 LCD (AiP31068 at I2C 0x3E) ----------------------
+
+// Every byte to the LCD is preceded by a control byte: 0x80 = "command", 0x40 = "text".
+const lcd = {
+  ready: false,
+  async init() {
+    for (const cmd of [0x28, 0x28, 0x28, 0x0c, 0x01, 0x06]) {   // 2 lines, display on, clear, cursor moves right
+      await robotConsole.send(`i2c 3e w 80 ${hex(cmd)}`, { quiet: true });
+    }
+    this.ready = true;
+  },
+  async show(line1, line2) {
+    if (!this.ready) await this.init();
+    for (const [row, text] of [[0x80, line1], [0xc0, line2]]) {      // 0x80 = row 1, 0xC0 = row 2
+      const chars = [...text.padEnd(16).slice(0, 16)].map((c) => c.charCodeAt(0) < 128 ? c.charCodeAt(0) : 0x3f);
+      await robotConsole.send(`i2c 3e w 80 ${hex(row)}`, { quiet: true });
+      await robotConsole.send(`i2c 3e w 40 ${chars.map(hex).join(" ")}`);
+    }
+  },
+};
+
+$("lcdShow").onclick = () => lcd.show($("lcd1").value, $("lcd2").value).catch((e) => log("screen", "err " + e.message));
+
+// ---- LED stick and buzzer ----------------------------------------------
+
+$("ledAll").onclick = () => robotConsole.send(`leds all ${$("ledColor").value.slice(1)}`).catch(() => {});
+$("ledOff").onclick = () => robotConsole.send("leds off").catch(() => {});
+$("ledRainbow").onclick = () => {
+  const colors = [];
+  for (let i = 0; i < 10; i++) {
+    const h = i / 10, f = (n) => { const k = (n + h * 6) % 6; return Math.round(255 * Math.max(0, Math.min(1, Math.min(k, 4 - k)))); };
+    colors.push(hex(f(5)) + hex(f(3)) + hex(f(1)));
+  }
+  robotConsole.send("leds " + colors.join(" ")).catch(() => {});
+};
+
+const NOTES = [["C", 262], ["D", 294], ["E", 330], ["F", 349], ["G", 392], ["A", 440], ["B", 494], ["C", 523]];
+for (const [name, hz] of NOTES) {
+  const b = Object.assign(document.createElement("button"), { textContent: name, className: "needs-robot", disabled: true });
+  b.onclick = () => robotConsole.send(`tone ${hz} 250`, { quiet: true }).catch(() => {});
+  $("notes").append(b);
+}
+
+// ---- Distance and gestures (polled) -------------------------------------
+
+let distTimer = null, gestureTimer = null;
+
+// Run `fn` again `ms` after it finishes (never overlapping, so requests can't pile up).
+function every(ms, fn) {
+  const loop = { on: true };
+  (async () => {
+    while (loop.on) {
+      await fn().catch(() => {});
+      await new Promise((r) => setTimeout(r, ms));
+    }
+  })();
+  return loop;
+}
+
+function stopPolling() {
+  if (distTimer) distTimer.on = false;
+  if (gestureTimer) gestureTimer.on = false;
+  distTimer = gestureTimer = null;
+  $("distToggle").textContent = "Start measuring";
+  $("gestureToggle").textContent = "Start gestures";
+}
+
+$("distToggle").onclick = () => {
+  if (distTimer) { distTimer.on = false; distTimer = null; $("distToggle").textContent = "Start measuring"; return; }
+  $("distToggle").textContent = "Stop";
+  distTimer = every(300, async () => {
+    try {
+      const reply = await robotConsole.send("dist", { quiet: true });
+      const cm = reply.split(" ")[1];
+      $("distance").textContent = cm === "none" ? "nothing in range" : cm + " cm";
+    } catch (e) { $("distance").textContent = "–"; }
+  });
+};
+
+// Grove Gesture (PAJ7620U2 at I2C 0x73). Register values from Seeed's Gesture_PAJ7620 library.
+const gesture = {
+  ready: false,
+  init: [
+    "ef=00 37=07 38=17 39=06 42=01 46=2d 47=0f 48=3c 49=00 4a=1e 4c=20 51=10 5e=10 60=27 80=42 81=44 82=04 8b=01 90=06 95=0a 96=0c 97=05 9a=14 9c=3f a5=19",
+    "cc=19 cd=0b ce=13 cf=64 d0=21 ef=01 02=0f 03=10 04=02 25=01 27=39 28=7f 29=08 3e=ff 5e=3d 65=96 67=97 69=cd 6a=01 6d=2c 6e=01 72=01 73=35 77=01 ef=00",
+    "ef=01 65=12 ef=00", // "near" mode, 240 reports per second
+  ],
+  names: ["up", "down", "left", "right", "forward", "backward", "clockwise", "anticlockwise"],
+  async start() {
+    // The sensor sleeps until it hears its address, so the first tries may get no answer.
+    let id = null;
+    for (let i = 0; i < 5 && !id; i++) {
+      id = await robotConsole.send("i2c 73 w 00 r 2", { quiet: true }).catch(() => null);
+    }
+    if (id !== "data 20 76") throw new Error("gesture sensor not found at 0x73");
+    for (const line of this.init) await robotConsole.send("regs 73 " + line, { quiet: true });
+    this.ready = true;
+  },
+  async read() {
+    const low = parseInt((await robotConsole.send("i2c 73 w 43 r 1", { quiet: true })).split(" ")[1], 16);
+    const high = parseInt((await robotConsole.send("i2c 73 w 44 r 1", { quiet: true })).split(" ")[1], 16);
+    if (high & 1) return "wave";
+    const bit = this.names.findIndex((_, i) => low === 1 << i);
+    return bit >= 0 ? this.names[bit] : null;
+  },
+};
+
+$("gestureToggle").onclick = async () => {
+  if (gestureTimer) { gestureTimer.on = false; gestureTimer = null; $("gestureToggle").textContent = "Start gestures"; return; }
+  try {
+    if (!gesture.ready) { $("gesture").textContent = "starting…"; await gesture.start(); }
+  } catch (e) { $("gesture").textContent = e.message; return; }
+  $("gesture").textContent = "wave a hand";
+  $("gestureToggle").textContent = "Stop";
+  gestureTimer = every(150, async () => {
+    const seen = await gesture.read().catch(() => null);
+    if (seen) $("gesture").textContent = seen;
+  });
+};
+
+// ---- Driving maths ------------------------------------------------------
+
+// "Arcade drive": forward/back + turn  ->  left/right wheel speeds.
+function currentDrive() {
+  let { x, y } = stick;
+  if (keys.size) {
+    y = (keys.has("up") ? 1 : 0) - (keys.has("down") ? 1 : 0);
+    x = (keys.has("right") ? 1 : 0) - (keys.has("left") ? 1 : 0);
+    if (y !== 0) x *= 0.5; // gentler turns while moving
+  }
+  let left = y + x, right = y - x;
+  const biggest = Math.max(1, Math.abs(left), Math.abs(right));
+  const limit = Number($("limit").value);
+  return [left, right].map((v) => Math.round((v / biggest) * limit));
+}
+
+// ---- Joystick -----------------------------------------------------------
+
+const pad = $("pad"), knob = $("knob");
+let activePointer = null;
+
+pad.addEventListener("pointerdown", (e) => { activePointer = e.pointerId; pad.setPointerCapture(e.pointerId); track(e); });
+pad.addEventListener("pointermove", (e) => { if (e.pointerId === activePointer) track(e); });
+for (const ev of ["pointerup", "pointercancel"]) {
+  pad.addEventListener(ev, (e) => {
+    if (e.pointerId !== activePointer) return;
+    activePointer = null; stick = { x: 0, y: 0 }; moveKnob(0, 0); sendDrive();
+  });
+}
+
+function track(e) {
+  const r = pad.getBoundingClientRect();
+  let x = ((e.clientX - r.left) / r.width) * 2 - 1;
+  let y = -(((e.clientY - r.top) / r.height) * 2 - 1);
+  const len = Math.hypot(x, y);
+  if (len > 1) { x /= len; y /= len; }
+  // Small dead zone in the middle so "let go" really means stop.
+  const dz = 0.08;
+  stick = { x: Math.abs(x) < dz ? 0 : x, y: Math.abs(y) < dz ? 0 : y };
+  moveKnob(x, y);
+  sendDrive();
+}
+
+function moveKnob(x, y) {
+  knob.style.left = 50 + x * 35 + "%";
+  knob.style.top = 50 - y * 35 + "%";
+}
+
+// ---- Keyboard -----------------------------------------------------------
+
+const keyMap = { ArrowUp: "up", KeyW: "up", ArrowDown: "down", KeyS: "down",
+                 ArrowLeft: "left", KeyA: "left", ArrowRight: "right", KeyD: "right" };
+addEventListener("keydown", (e) => { const k = keyMap[e.code]; if (k) { keys.add(k); e.preventDefault(); sendDrive(); } });
+addEventListener("keyup", (e) => { const k = keyMap[e.code]; if (k) { keys.delete(k); sendDrive(); } });
+
+// ---- UI bits ------------------------------------------------------------
+
+$("limit").oninput = () => { $("limitValue").textContent = $("limit").value; sendDrive(); };
+
+function setStatus(text, ok = false) {
+  $("status").textContent = text;
+  $("status").classList.toggle("connected", ok);
+}
+
+function showMotors(left, right) {
+  for (const [bar, value, v] of [["leftBar", "leftValue", left], ["rightBar", "rightValue", right]]) {
+    const el = $(bar);
+    el.style.left = (v >= 0 ? 50 : 50 + v / 2) + "%";
+    el.style.width = Math.abs(v) / 2 + "%";
+    $(value).textContent = v;
+  }
+}
+
+function showButtons(mask) {
+  // The dongle has one button, the DK four: add a dot whenever a new one shows up.
+  const box = document.querySelector(".buttons");
+  while (mask >> box.children.length) {
+    box.append(Object.assign(document.createElement("span"), { textContent: box.children.length + 1 }));
+  }
+  [...box.children].forEach((el, i) => el.classList.toggle("pressed", !!(mask & (1 << i))));
+}
+
+function showMotorDriver(ok) {
+  const el = $("motorDriver");
+  el.textContent = ok === null ? "Motor driver: –" : ok ? "Motor driver: connected" : "Motor driver: not found (check cable and battery)";
+  el.className = "driver" + (ok === null ? "" : ok ? " ok" : " missing");
+}
+
+function renderHeadlight() {
+  $("headlight").classList.toggle("on", headlightOn);
+  $("headlight").textContent = headlightOn ? "Headlight on" : "Headlight";
+}
+</script>
+</body>
+</html>

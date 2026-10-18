@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#14181c">
+<title>Robot Cab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- One picture, one meaning. -->
+    <symbol id="i-signal" viewBox="0 0 24 24"><rect x="7" y="1" width="10" height="16" rx="5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="5.5" r="2.2" fill="currentColor"/><circle cx="12" cy="12" r="2.2" fill="currentColor" opacity=".45"/><path d="M12 17v6M8 23h8" stroke="currentColor" stroke-width="1.8"/></symbol>
+    <symbol id="i-bt" viewBox="0 0 24 24"><path d="M6 7l11 10-5 4.5V2.5L17 7 6 17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-buffer" viewBox="0 0 24 24"><path d="M2 19h20" stroke="currentColor" stroke-width="2"/><path d="M5 19V9h14v10" fill="none" stroke="currentColor" stroke-width="2"/><rect x="4" y="5" width="16" height="4" rx="1" fill="currentColor"/><circle cx="8" cy="7" r="1" fill="var(--panel)"/><circle cx="16" cy="7" r="1" fill="var(--panel)"/></symbol>
+    <symbol id="i-pedal" viewBox="0 0 24 24"><path d="M4 20h16l-2-9H6z" fill="currentColor"/><path d="M8 11c0-4 1.8-7 4-7s4 3 4 7" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+    <symbol id="i-wheel" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="2.5" fill="currentColor"/><path d="M12 2.5v7M12 14.5v7M2.5 12h7M14.5 12h7" stroke="currentColor" stroke-width="2"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><path d="M3 3h18v18H3zM9 3v18M15 3v18M3 9h18M3 15h18" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+    <symbol id="i-loco" viewBox="0 0 24 24"><path d="M5 4h9l5 8-5 8H5z" fill="currentColor"/><rect x="7" y="2" width="5" height="2" fill="currentColor"/><rect x="7" y="20" width="5" height="2" fill="currentColor"/></symbol>
+    <symbol id="i-horn" viewBox="0 0 24 24"><path d="M3 9h4l9-5v16l-9-5H3z" fill="currentColor"/><path d="M19 8c1.5 2.4 1.5 5.6 0 8M21.5 5.5c2.7 3.9 2.7 9.1 0 13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-lamp" viewBox="0 0 24 24"><circle cx="12" cy="10" r="6" fill="currentColor"/><path d="M9 18h6M10 21h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M12 1v1.5M3.5 4.5l1 1M20.5 4.5l-1 1M1 10h1.5M21.5 10H23" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="i-lever" viewBox="0 0 24 24"><rect x="10.5" y="2" width="3" height="20" rx="1.5" fill="currentColor" opacity=".4"/><rect x="5" y="8" width="14" height="6" rx="2" fill="currentColor"/></symbol>
+    <symbol id="i-reverser" viewBox="0 0 24 24"><path d="M12 2l5 6H7zM12 22l-5-6h10z" fill="currentColor"/><circle cx="12" cy="12" r="2.5" fill="currentColor"/></symbol>
+    <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 3l8 10h-5v8H9v-8H4z" fill="currentColor"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 21l-8-10h5V3h6v8h5z" fill="currentColor"/></symbol>
+    <symbol id="i-brake" viewBox="0 0 24 24"><path d="M8 1h8l7 7v8l-7 7H8l-7-7V8z" fill="currentColor"/><rect x="6" y="10.2" width="12" height="3.6" rx="1" fill="#fff"/></symbol>
+    <symbol id="i-rec" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="5.5" fill="currentColor"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4l13 8-13 8z" fill="currentColor"/></symbol>
+    <symbol id="i-step" viewBox="0 0 24 24"><path d="M4 4l11 8-11 8z" fill="currentColor"/><rect x="17" y="4" width="3.5" height="16" rx="1" fill="currentColor"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 6.5V12l4 2.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24"><rect x="8.5" y="2" width="7" height="12" rx="3.5" fill="currentColor"/><path d="M5 11c0 3.9 3.1 7 7 7s7-3.1 7-7M12 18v4M8.5 22h7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><path d="M10.5 1.5h3l.6 3 2.3 1 2.6-1.7 2.1 2.1-1.7 2.6 1 2.3 3 .6v3l-3 .6-1 2.3 1.7 2.6-2.1 2.1-2.6-1.7-2.3 1-.6 3h-3l-.6-3-2.3-1-2.6 1.7-2.1-2.1 1.7-2.6-1-2.3-3-.6v-3l3-.6 1-2.3-1.7-2.6 2.1-2.1 2.6 1.7 2.3-1z" fill="currentColor"/><circle cx="12" cy="12" r="3.5" fill="var(--bg, #14181c)"/></symbol>
+    <symbol id="i-left" viewBox="0 0 24 24"><path d="M19 20v-6a6 6 0 0 0-6-6H5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M9 3.5L4.5 8 9 12.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-right" viewBox="0 0 24 24"><path d="M5 20v-6a6 6 0 0 1 6-6h8" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M15 3.5L19.5 8 15 12.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 6h16M9 6V3.5h6V6M6.5 6l1 15h9l1-15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></symbol>
+    <symbol id="i-button" viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="8" y="5" width="8" height="6" rx="1.5" fill="currentColor"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><rect x="3" y="12" width="9" height="8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M14 4l6 6-8 8H6v-6z" fill="currentColor"/></symbol>
+  </defs>
+</svg>
+
+<main id="cab" class="cab offline">
+  <!-- status strip: identity, the last announcement, and lamps a driver scans at a glance -->
+  <header class="strip">
+    <div class="ident"><svg class="i"><use href="#i-loco"/></svg><span id="ident">—</span></div>
+    <button class="announce" id="announce" aria-label="Last announcement (tap to hear again)">
+      <svg class="i"><use id="annIcon" href="#i-signal"/></svg><b id="annNum"></b><span id="annText" aria-live="polite"></span>
+    </button>
+    <div class="lamps">
+      <span class="lamp" id="lampLink" data-name="lampLink"><svg class="i"><use href="#i-bt"/></svg></span>
+      <span class="lamp" id="lampAtp" data-name="lampAtp"><svg class="i"><use href="#i-buffer"/></svg></span>
+      <span class="lamp" id="lampSifa" data-name="lampSifa"><svg class="i"><use href="#i-pedal"/></svg></span>
+      <span class="lamp" id="lampMotor" data-name="lampMotor"><svg class="i"><use href="#i-wheel"/></svg></span>
+    </div>
+    <button id="gear" class="gear" aria-label="Settings (hold)">
+      <svg class="ring" viewBox="0 0 40 40"><circle cx="20" cy="20" r="17"/></svg>
+      <svg class="i"><use href="#i-gear"/></svg>
+    </button>
+  </header>
+
+  <!-- master controller: notches stay where you put them -->
+  <section class="throttle" id="throttle" aria-label="Throttle">
+    <div class="rail" id="rail" data-name="lever">
+      <button class="notch" data-v="1">1</button>
+      <button class="notch" data-v="0.75" aria-label="three quarters"><span class="frac"><i>3</i><i>4</i></span></button>
+      <button class="notch" data-v="0.5" aria-label="one half"><span class="frac"><i>1</i><i>2</i></span></button>
+      <button class="notch" data-v="0.25" aria-label="one quarter"><span class="frac"><i>1</i><i>4</i></span></button>
+      <button class="notch zero" data-v="0">0</button>
+      <div class="handle" id="handle"><span></span><span></span><span></span></div>
+      <div class="band blocked" id="blockedBand"></div>
+      <div class="band caution" id="cautionBand"></div>
+    </div>
+  </section>
+
+  <!-- centre display -->
+  <section class="display" id="display">
+    <div class="instruments">
+      <div class="gauge">
+        <svg viewBox="0 0 120 74" class="dial" aria-label="Speed">
+          <path class="arc" d="M10 64 A50 50 0 0 1 110 64"/>
+          <g class="ticks"></g>
+          <line id="wanted" class="wanted" x1="60" y1="12" x2="60" y2="22"/>
+          <line id="needle" class="needle" x1="60" y1="64" x2="60" y2="20"/>
+          <circle cx="60" cy="64" r="4" class="hub"/>
+        </svg>
+        <div class="readout" id="speedBox"><span id="speedVal">0</span><small>cm/s</small></div>
+      </div>
+      <div class="distance">
+        <div class="signal" id="signal" data-name="signal"><i class="g"></i><i class="r"></i><i class="y"></i></div>
+        <div class="readout big"><span id="distVal">—</span><small>cm</small></div>
+      </div>
+      <div class="odo">
+        <div class="readout" id="odoBox"><span id="odoVal">0</span><small>cm</small></div>
+        <div class="leds" id="ledRow"></div>
+      </div>
+    </div>
+
+    <div class="view">
+      <canvas id="map" class="map" aria-label="Floor plan"></canvas>
+      <button id="editFloor" class="corner" data-name="edit" aria-label="Edit the floor"><svg class="i"><use href="#i-edit"/></svg></button>
+      <div class="track" id="track" aria-label="Track ahead">
+        <div class="ruler" id="ruler"><div class="limit red" id="limitRed"></div><div class="limit yellow" id="limitYellow"></div></div>
+        <div class="obstacle" id="obstacle"></div>
+        <svg class="me i"><use href="#i-loco"/></svg>
+      </div>
+
+      <div class="connect" id="connect">
+        <button id="connectBle" class="tile" data-name="robot"><svg class="i"><use href="#i-bt"/></svg><svg class="i"><use href="#i-loco"/></svg><span data-t="robot">Robot</span></button>
+        <button id="connectSim" class="tile" data-name="sim"><svg class="i"><use href="#i-grid"/></svg><span data-t="sim">Simulator</span></button>
+      </div>
+
+      <div class="drawer lights" id="lightsPanel" hidden>
+        <div class="led-edit" id="ledEdit"></div>
+        <div class="row">
+          <div class="brushes" id="brushes"></div>
+          <button id="fillAll" class="chip" aria-label="All lamps this colour"><svg class="i"><use href="#i-lamp"/></svg>×10</button>
+          <button id="lightsDone" class="chip" aria-label="Close"><svg class="i"><use href="#i-close"/></svg></button>
+        </div>
+      </div>
+
+      <div class="drawer timetable" id="timetable" hidden>
+        <div class="tt-head">
+          <span class="badge" id="ttBadge">1</span>
+          <span class="tt-total" id="ttTotal"></span>
+          <button id="ttPlay" class="chip go" data-name="play" aria-label="Run"><svg class="i"><use href="#i-play"/></svg></button>
+          <button id="ttStep" class="chip" data-name="step" aria-label="One step"><svg class="i"><use href="#i-step"/></svg></button>
+          <button id="ttDelete" class="chip hold" aria-label="Delete (hold)"><svg class="i"><use href="#i-trash"/></svg></button>
+          <button id="ttClose" class="chip" aria-label="Close"><svg class="i"><use href="#i-close"/></svg></button>
+        </div>
+        <ol class="tt-rows" id="ttRows"></ol>
+        <div class="tt-add" id="ttAdd">
+          <svg class="i plus"><use href="#i-plus"/></svg>
+          <button class="chip" data-add="drive" aria-label="Add: drive"><svg class="i"><use href="#i-lever"/></svg></button>
+          <button class="chip" data-add="left" aria-label="Add: turn left"><svg class="i"><use href="#i-left"/></svg></button>
+          <button class="chip" data-add="right" aria-label="Add: turn right"><svg class="i"><use href="#i-right"/></svg></button>
+          <button class="chip" data-add="wait" aria-label="Add: wait"><svg class="i"><use href="#i-clock"/></svg></button>
+          <button class="chip" data-add="horn" aria-label="Add: horn"><svg class="i"><use href="#i-horn"/></svg></button>
+          <button class="chip" data-add="lights" aria-label="Add: lamps as they are now"><svg class="i"><use href="#i-lamp"/></svg></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- desk: steering; horn and lamps; safety (vigilance + emergency brake) -->
+  <section class="desk" id="desk">
+    <div class="steer" id="steer" data-name="steer" aria-label="Steering">
+      <svg class="i l"><use href="#i-left"/></svg>
+      <div class="steer-track"><div class="steer-knob" id="steerKnob"></div></div>
+      <svg class="i r"><use href="#i-right"/></svg>
+    </div>
+    <div class="keys">
+      <button id="horn" class="key" data-name="horn" aria-label="Horn"><svg class="i"><use href="#i-horn"/></svg></button>
+      <button id="lightsBtn" class="key" data-name="lamps" aria-label="Lamps"><svg class="i"><use href="#i-lamp"/></svg></button>
+      <button id="reverser" class="key rev" data-name="reverser" aria-label="Direction"><svg class="i"><use id="revIcon" href="#i-up"/></svg></button>
+    </div>
+    <div class="safety">
+      <button id="sifa" class="key sifa" data-name="sifa" aria-label="Vigilance">
+        <svg class="ring" viewBox="0 0 52 52"><rect x="2" y="2" width="48" height="48" rx="10"/></svg>
+        <svg class="i"><use href="#i-pedal"/></svg>
+      </button>
+      <button id="ebrake" class="ebrake" aria-label="Emergency brake"><svg class="i"><use href="#i-brake"/></svg></button>
+    </div>
+  </section>
+
+  <!-- programs: numbered lines, record, voice -->
+  <footer class="programs">
+    <div class="badges" id="badges"></div>
+    <button id="rec" class="key rec" data-name="rec" aria-label="Record a program"><svg class="i"><use href="#i-rec"/></svg></button>
+    <button id="mic" class="key mic" data-name="mic" aria-label="Voice command (hold)"><svg class="i"><use href="#i-mic"/></svg></button>
+  </footer>
+</main>
+
+<dialog id="settings" class="settings">
+  <form method="dialog">
+    <h2>Settings</h2>
+    <p class="muted" id="connInfo">Not connected.</p>
+    <div class="grid2">
+      <label>Language<select id="lang"><option value="en">English</option><option value="de">Deutsch</option><option value="ru">Русский</option></select></label>
+      <label>Top speed <output id="maxOut">60</output>%<input type="range" id="maxSpeed" min="20" max="100" step="5" value="60"></label>
+      <label>Obstacle protection<select id="guard"><option value="0">Off</option><option value="10">10 cm</option><option value="20">20 cm</option><option value="35">35 cm</option><option value="50">50 cm</option></select></label>
+      <label>Vigilance check<select id="sifaEvery"><option value="0">Off</option><option value="30">every 30 s</option><option value="60">every 60 s</option><option value="120">every 2 min</option></select></label>
+    </div>
+    <fieldset class="sounds">
+      <legend>Sounds and lights</legend>
+      <label class="check"><input type="checkbox" id="voiceOn"> Announcements (spoken)</label>
+      <label class="check"><input type="checkbox" id="tonesOn"> Robot sounds (horn, beeps)</label>
+      <label class="check"><input type="checkbox" id="alarmsOn"> Alarm beeps (vigilance, obstacle)</label>
+      <label class="check"><input type="checkbox" id="blinkOn"> Blinking lamps</label>
+      <label class="check"><input type="checkbox" id="listenOn"> Voice commands (Chrome sends the audio to Google for recognition)</label>
+    </fieldset>
+    <details id="wishBox">
+      <summary>Things he asked for that the robot doesn't know yet (<span id="wishCount">0</span>)</summary>
+      <ul id="wishes"></ul>
+      <div class="row"><button type="button" id="copyWishes">Copy</button><button type="button" id="clearWishes">Clear</button></div>
+    </details>
+    <div class="row wrap">
+      <button type="button" id="resetRoom">Reset simulator floor</button>
+      <button type="button" id="clearPrograms">Delete all programs</button>
+      <a href="workshop.html">Workshop: LCD, sensors, console</a>
+    </div>
+    <div class="row end">
+      <button type="button" id="disconnect">Disconnect</button>
+      <button value="close" class="primary">Done</button>
+    </div>
+  </form>
+</dialog>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
