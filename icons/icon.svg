@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Robot Cab's home-screen icon: the cab's loco on its dark panel. Full-bleed, so Android can
+       mask it to any shape; the loco stays inside the central safe zone. -->
+  <rect width="512" height="512" fill="#14181c"/>
+  <rect x="96" y="364" width="320" height="14" rx="7" fill="#343d46"/>
+  <g transform="translate(136 136) scale(10)" fill="#f2b134">
+    <path d="M5 4h9l5 8-5 8H5z"/><rect x="7" y="2" width="5" height="2"/><rect x="7" y="20" width="5" height="2"/>
+  </g>
+</svg>

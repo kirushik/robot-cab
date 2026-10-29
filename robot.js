@@ -10,9 +10,9 @@
 //   "distance" {cm: number | null}        null = no echo / nothing measured
 //   "buttons"  {mask}                     bit 0..3 board buttons, bit 4..5 Grove dual button
 //   "driver"   {ok}                       motor driver answering on I2C
-//   "guard"    {blocked, cm, limit}       the robot's own obstacle reflex kicked in / released;
-//                                         cm = distance measured then, if known (null on the real
-//                                         robot), limit = the configured guard distance
+//   "guard"    {blocked, reason, cm}      the robot's own obstacle reflex kicked in / released;
+//                                         reason "obstacle" (cm measured) or "noEcho" (firmware
+//                                         0.2.0+; older firmware prints its threshold instead)
 //   "bump"     {}                         (pretend robot only) drove into something
 
 // Must match firmware/src/ble.rs
@@ -34,8 +34,34 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const hex2 = (n) => n.toString(16).padStart(2, "0");
 export const toHex = (rgb) => rgb.map(hex2).join("");
 
+/// One `!` line from the robot (without the "!") as an app event, or null. The simulator turns its
+/// supervisor's decisions into the same lines, so both robots reach the cab through this.
+export function parseEvent(line) {
+  const [what, ...rest] = line.trim().split(/\s+/);
+  if (what === "dist" && (rest[0] === "none" || Number.isFinite(Number(rest[0])))) {
+    return { type: "distance", detail: { cm: rest[0] === "none" ? null : Number(rest[0]) } };
+  }
+  if (what === "guard" && rest[0] === "stop") {
+    const none = rest[1] === "none";
+    return { type: "guard", detail: { blocked: true, reason: none ? "noEcho" : "obstacle", cm: none ? null : Number(rest[1]) || null } };
+  }
+  if (what === "guard") return { type: "guard", detail: { blocked: false } };
+  return null;
+}
+
+/// `ver robot-firmware 0.2.0 dongle` -> { name, version: [0, 2, 0], board }, or null.
+export function parseVersion(reply) {
+  const [what, name, version, board] = (reply ?? "").trim().split(/\s+/);
+  if (what !== "ver" || !version) return null;
+  return { name, version: version.split(".").map((n) => Number(n) || 0), board };
+}
+/// Firmware from 0.2.0 says why its guard stopped (`! guard stop 17` / `! guard stop none`).
+export const guardGivesReasons = (fw) => !!fw && (fw.version[0] > 0 || fw.version[1] >= 2);
+
 export class BleRobot extends EventTarget {
   kind = "ble";
+  odometry = false; // no wheel encoders: speed and distance driven can only be estimated
+  firmware = null; // { name, version, board } from `ver`, once connected
   state = "disconnected";
   name = "";
   #device = null;
@@ -121,6 +147,7 @@ export class BleRobot extends EventTarget {
     this.#console = new Console(await uart.getCharacteristic(UART_RX), await uart.getCharacteristic(UART_TX),
       (event) => this.#event(event));
     await this.#console.start();
+    try { this.firmware = parseVersion(await this.command("ver")); } catch { this.firmware = null; }
 
     // Never resume old motion after (re)connecting.
     this.#want = [0, 0];
@@ -152,12 +179,8 @@ export class BleRobot extends EventTarget {
   }
 
   #event(line) {
-    const [what, ...rest] = line.split(" ");
-    if (what === "dist" && (rest[0] === "none" || Number.isFinite(Number(rest[0])))) {
-      emit(this, "distance", { cm: rest[0] === "none" ? null : Number(rest[0]) });
-    }
-    // `! guard stop 20` names the configured limit, not a measured distance.
-    if (what === "guard") emit(this, "guard", { blocked: rest[0] === "stop", cm: null, limit: Number(rest[1]) || null });
+    const event = parseEvent(line);
+    if (event) emit(this, event.type, event.detail);
   }
 
   async #pump(heartbeat = false) {
