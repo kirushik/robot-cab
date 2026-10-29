@@ -4,15 +4,15 @@
 // (robot.js / sim.js); this file is the UI. Rule of the house: nothing happens to the driver
 // without warning, and every picture means one thing.
 
-import { BleRobot, bluetoothAvailable, guardGivesReasons } from "./robot.js";
-import { SimRobot } from "./sim.js";
-import { createServo } from "./servo.js";
-import { createStop } from "./stop.js";
-import { createKit } from "./kit.js";
-import { createConsist } from "./consist.js";
-import { NAMES } from "./voice.js";
-import { Voice, NOTCH_NAMES, LINES } from "./voice.js";
-import { parse, understand, readBack, endsWithOver, onlyOpener } from "./radio.js";
+import { BleRobot, bluetoothAvailable, guardGivesReasons } from "./robot.js?v=64575a2";
+import { SimRobot } from "./sim.js?v=64575a2";
+import { createServo } from "./servo.js?v=64575a2";
+import { createStop } from "./stop.js?v=64575a2";
+import { createKit } from "./kit.js?v=64575a2";
+import { createConsist } from "./consist.js?v=64575a2";
+import { NAMES } from "./voice.js?v=64575a2";
+import { Voice, NOTCH_NAMES, LINES } from "./voice.js?v=64575a2";
+import { parse, understand, readBack, endsWithOver, onlyOpener } from "./radio.js?v=64575a2";
 
 const $ = (id) => document.getElementById(id);
 const cab = $("cab");
@@ -1531,7 +1531,7 @@ placeHandle();
 // Installable as a fullscreen home-screen app (manifest.webmanifest) that also opens offline (sw.js).
 // Not under test automation, so the tests always see the files as they are.
 if ("serviceWorker" in navigator && isSecureContext && !navigator.webdriver) {
-  navigator.serviceWorker.register("sw.js").catch(() => { /* fine: it still works in the browser */ });
+  navigator.serviceWorker.register("sw.js?v=64575a2").catch(() => { /* fine: it still works in the browser */ });
 }
 
 // For tests and curious grown-ups in the browser console.

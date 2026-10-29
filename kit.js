@@ -99,7 +99,7 @@ export function createKit({ outputs, onChange = () => {}, now = () => performanc
     /// Start a module from its URL. Resolves with its entry once it has mounted.
     load(url, { store = {} } = {}) {
       return new Promise((resolve, reject) => {
-        const worker = new Worker(new URL("modules/sandbox.js", import.meta.url), { type: "module" });
+        const worker = new Worker(new URL("modules/sandbox.js?v=64575a2", import.meta.url), { type: "module" });
         const entry = { url, worker, state: "loading", errors: [], manifest: null, store, resolve, reject };
         worker.onmessage = (e) => onMessage(entry, e.data);
         worker.onerror = (e) => { e.preventDefault(); onMessage(entry, { type: "error", message: e.message || "worker failed" }); };

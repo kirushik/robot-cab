@@ -11,7 +11,7 @@
 // ghost (dashed grey on the siding: missing from two scans), unknown («?» with its address; the cab
 // files a wish by itself). Module health never goes on the status strip: those lamps are safety only.
 
-import { gestureFace, gestureSource } from "./gesture.js";
+import { gestureFace, gestureSource } from "./gesture.js?v=64575a2";
 
 const LOCO = "0f"; // the motor driver is the loco itself
 // Devices the cab has a face for. A digital servo can't be scanned: it is born by handshake.

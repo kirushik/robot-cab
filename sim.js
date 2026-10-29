@@ -23,7 +23,7 @@
 // floor to add one, tap a block to make it soft or hard again, hold a block to remove it. The
 // layout is remembered on this phone.
 
-import { parseEvent } from "./robot.js";
+import { parseEvent } from "./robot.js?v=64575a2";
 
 const FIRMWARE = "robot-firmware 0.2.0 sim"; // the supervisor it runs is the firmware's own
 
@@ -73,7 +73,7 @@ export const WORLDS = {
 
 async function loadRustSupervisor() {
   try {
-    const { instance } = await WebAssembly.instantiateStreaming(fetch(new URL("robot_core.wasm", import.meta.url)));
+    const { instance } = await WebAssembly.instantiateStreaming(fetch(new URL("robot_core.wasm?v=64575a2", import.meta.url)));
     return instance.exports;
   } catch {
     return null;

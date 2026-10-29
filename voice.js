@@ -145,7 +145,7 @@ export const LINES = {
 const SAFETY = new Set(["obstacle", "noEcho", "guardStop", "noEchoSlow", "clearZero", "leverZero", "reverse", "caution", "sifa", "sifaBrake", "ebrake", "bump", "lost", "noMotors"]);
 
 // Voice commands are parsed in radio.js (the radio protocol).
-export { understand } from "./radio.js";
+export { understand } from "./radio.js?v=64575a2";
 
 export class Voice {
   lang = "en";
